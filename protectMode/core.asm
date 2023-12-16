@@ -36,7 +36,7 @@
 SECTION app_stack vstart=0 
         times 2048        db 0  
 
-        app_stack_end 
+        app_stack_end:
 
 SECTION sys_routine vstart=0                ;ϵͳ�������̴���� 
 ;-------------------------------------------------------------------------------
@@ -385,7 +385,7 @@ SECTION core_data vstart=0                  ;ϵͳ���ĵ����ݶ�
          bin_hex          db '0123456789ABCDEF'
                                             ;put_hex_dword�ӹ����õĲ��ұ�
 
-         app_stack_buf times 512 db 0 
+         app_stack_buf times 2048 db 0 
          core_buf   times 2048 db 0         ;�ں��õĻ�����
 
          esp_pointer      dd 0              ;�ں�������ʱ�����Լ���ջָ��     
@@ -400,7 +400,7 @@ SECTION core_code vstart=0
 ;-------------------------------------------------------------------------------
 load_relocate_program:                      ;加载用户程序 
                                             ;esi指向用户程序的起始扇区号 
-                                            ;���أ�AX=ָ���û�����ͷ����ѡ���� 
+                                            ;ax指向用户程序头部段 
          push ebx
          push ecx
          push edx
@@ -472,18 +472,9 @@ load_relocate_program:                      ;加载用户程序
          call sys_routine_seg_sel:make_seg_descriptor
          call sys_routine_seg_sel:set_up_gdt_descriptor
          mov [edi+0x14],cx
-
-         ;���������ջ��������
-        ;  mov eax,edi
-        ;  add eax,[edi+0x1c]                 ;���ݶ���ʼ���Ե�ַ
-        ;  mov ebx,[edi+0x20]                 ;�γ���
-        ;  dec ebx                            ;�ν���
-        ;  mov ecx,0x00409200                 ;�ֽ����ȵ����ݶ�������
-        ;  call sys_routine_seg_sel:make_seg_descriptor
-        ;  call sys_routine_seg_sel:set_up_gdt_descriptor
-        ;  mov [edi+0x1c],cx
+        ;系统为用户程序分配栈 
         mov eax, app_stack_buf 
-        mov ebx, 512 
+        mov ebx, 2048 
         dec ebx 
         mov ecx, 0x00409200
         call sys_routine_seg_sel:make_seg_descriptor
@@ -590,11 +581,14 @@ start:
          call sys_routine_seg_sel:put_string
          ; 准备进入用户程序 
          mov [esp_pointer],esp               ;保存内核栈指针 
+         push eax 
+         mov eax,[ss_selector_buf]  ;将ss指向内核分配的栈空间 
+         mov ss,eax 
+         pop eax 
+         
        
          mov ds,ax  ; ds指向用户程序头部 
 
-         mov eax,[ss_selector_buf]  
-         mov ss,eax 
          mov esp,core_buf 
 
          jmp far [0x08]                      ;����Ȩ�����û�������ڵ㣩

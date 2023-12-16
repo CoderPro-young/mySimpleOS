@@ -63,8 +63,8 @@ start:
          mov eax,ds
          mov fs,eax
 
-         mov ss,[fs:stack_seg]
-         mov esp,stack_end
+        ;  mov ss,[fs:stack_seg]
+        ;  mov esp,stack_end
 
          mov ds,[fs:data_seg]
 
