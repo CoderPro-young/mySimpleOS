@@ -47,7 +47,7 @@ showScreen:; show all line in screen
     push bx 
     push dx 
 
-    ; mov ax,[data_1_segment]
+    ; mov ax,[data_1_segment] 
     ; mov ds,ax 
     mov cx,2 
     mov bx,0 
@@ -64,7 +64,7 @@ showScreen:; show all line in screen
         mov di,ax 
         add di,30*2 
         push bx 
-        add bx,bx 
+        shl bx 
         mov bx,strTable[bx] ; get address of string 
         call doShowOneStr
 
@@ -119,6 +119,46 @@ doShowOneStrRet:
     pop si 
     ret 
 
+chooseOption:
+    
+    s:
+        call clearBuf
+        mov ah,0
+        int 16H 
+        cmp al, '1'
+        jz do1 
+        cmp al, '2'
+        jz do2 
+        cmp al, '3'
+        jz do3 
+        cmp al, '4'
+        jz do4 
+
+
+        jmp s 
+clearBuf: ; while loop to clean buffer 
+    mov ah,1
+    int 16h 
+    jz clearBufRet
+    mov ah,0 
+    int 16h 
+    jmp  clearBuf
+
+clearBufRet:
+    ret 
+
+do1:
+
+    ret 
+
+do2:
+    ret 
+
+do3:
+    ret 
+
+do4:
+    ret 
 start:
     ; 初始化段寄存器
     mov ax,[stack_segment]
@@ -131,6 +171,8 @@ start:
     ; call showwelcome
     call showScreen 
     jmp $ 
+
+
 
 
 code_1_end: 
