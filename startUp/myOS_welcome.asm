@@ -1,3 +1,4 @@
+weclome_os_data_start equ 100 
 SECTION header vstart=0
     program_length  dd program_end  ; 0x00 length 
     code_entry      dw start        ; 0x04 
@@ -120,7 +121,7 @@ doShowOneStrRet:
     ret 
 
 chooseOption:
-    
+    call showScreen
     s:
         call clearBuf
         mov ah,0
@@ -147,11 +148,88 @@ clearBuf: ; while loop to clean buffer
 clearBufRet:
     ret 
 
+write_to_disk:
+    // di:si 目标扇区
+    // ds 数据段基址 
+    // bx 数据总数 
+        push ax
+        push bx
+        push cx
+        push dx
+    
+        mov dx,0x1f2
+        mov al,1
+        out dx,al                       ;设置需要读写的扇区数量，通过0x1f2端口
+
+        inc dx                          ;0x1f3
+        mov ax,si
+        out dx,al                       ;LBA��ַ7~0
+
+        inc dx                          ;0x1f4
+        mov al,ah
+        out dx,al                       ;LBA��ַ15~8
+
+        inc dx                          ;0x1f5
+        mov ax,di
+        out dx,al                       ;LBA��ַ23~16
+
+        inc dx                          ;0x1f6
+        mov al,0xe0                     ;LBA28ģʽ������
+        or al,ah                        ;LBA��ַ27~24
+        out dx,al
+
+        inc dx                          ;0x1f7
+        mov al,0x30                     ;向端口发送写命令 
+        out dx,al
+
+.waits:
+        in al,dx
+        and al,0x88
+        cmp al,0x08
+        jnz .waits                      ;��æ����Ӳ����׼�������ݴ��� 
+
+        mov cx,256                      ;�ܹ�Ҫ��ȡ������
+        mov dx,0x1f0
+.writew:
+        in ax,dx
+        mov [bx],ax        ; 这里ds已经被设置为指向0x10000地址的基地址，所以这里可以将内核程序读入到指定的位置 
+        add bx,2
+        loop .writew
+
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+    
+        ret
 do1:
 
     ret 
 
 do2:
+    push bx 
+    call clearScreen
+    mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
+    int 16H ; get dword byte form keyBoard ,ah = scanCode al = ascii 
+
+    cmp ah ,0x01 
+    jz do2End ; esc return choose 
+
+    cmp ah, 0x1c ; if enter, end 
+    jz do2End
+
+
+    mov buffer[bx] , al 
+    add bx,1 
+
+    
+
+do2End:
+    test bx,bx 
+    xor di,di 
+    mov si weclome_os_data_start 
+    jnz write_to_disk 
+    pop bx 
     ret 
 
 do3:
@@ -169,7 +247,8 @@ start:
 
     call clearScreen
     ; call showwelcome
-    call showScreen 
+    call chooseOption
+    ; call showScreen 
     jmp $ 
 
 
@@ -182,7 +261,7 @@ SECTION code_2 align=16 vstart=0
 
 ;===============================================================================
 SECTION data_1  align=16 vstart=0 
-    msg db "This is data_1",0 
+    buffer resb 64 ; 分配64字节
 strTable dw first, second  ; 这里存储了几个字符串的偏移地址 
 first db "1) clock",0
 second db "2) set name",0
