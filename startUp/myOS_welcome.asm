@@ -65,7 +65,7 @@ showScreen:; show all line in screen
         mov di,ax 
         add di,30*2 
         push bx 
-        shl bx 
+        shl bx , 1
         mov bx,strTable[bx] ; get address of string 
         call doShowOneStr
 
@@ -149,9 +149,9 @@ clearBufRet:
     ret 
 
 write_to_disk:
-    // di:si 目标扇区 高16位放di 低16位放si 
-    // ds 数据段基址 
-    // bx 数据总数 
+    ; di:si 目标扇区 高16位放di 低16位放si 
+    ; ds 数据段基址 
+    ; bx 数据总数 
         push ax
         push bx
         push cx
@@ -205,7 +205,13 @@ write_to_disk:
     
         ret
 do1:
+    call clearScreen
+    mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
+    int 16H ; get dword byte form keyBoard ,ah = scanCode al = ascii 
 
+    cmp ah ,0x01 
+    jz do1End ; esc return choose 
+do1End:    
     ret 
 
 do2:
@@ -229,7 +235,7 @@ do2:
 do2End:
     test bx,bx 
     xor di,di 
-    mov si weclome_os_data_start 
+    mov si, weclome_os_data_start 
     jnz write_to_disk 
     pop bx 
     ret 
