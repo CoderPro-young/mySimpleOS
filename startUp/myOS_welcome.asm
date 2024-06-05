@@ -149,7 +149,7 @@ clearBufRet:
     ret 
 
 write_to_disk:
-    // di:si 目标扇区
+    // di:si 目标扇区 高16位放di 低16位放si 
     // ds 数据段基址 
     // bx 数据总数 
         push ax
@@ -163,19 +163,19 @@ write_to_disk:
 
         inc dx                          ;0x1f3
         mov ax,si
-        out dx,al                       ;LBA��ַ7~0
+        out dx,al                       ;LBA地址7~0
 
         inc dx                          ;0x1f4
         mov al,ah
-        out dx,al                       ;LBA��ַ15~8
+        out dx,al                       ;LBA地址15~8
 
         inc dx                          ;0x1f5
         mov ax,di
-        out dx,al                       ;LBA��ַ23~16
+        out dx,al                       ;LBA 23~16
 
         inc dx                          ;0x1f6
-        mov al,0xe0                     ;LBA28ģʽ������
-        or al,ah                        ;LBA��ַ27~24
+        mov al,0xe0                     ;LBA28 
+        or al,ah                        ;端口高四位为0x1110 低四位为扇区号的最高四位 
         out dx,al
 
         inc dx                          ;0x1f7
@@ -188,11 +188,13 @@ write_to_disk:
         cmp al,0x08
         jnz .waits                      ;��æ����Ӳ����׼�������ݴ��� 
 
-        mov cx,256                      ;�ܹ�Ҫ��ȡ������
-        mov dx,0x1f0
+        mov cx,bx                      ;需要读写的字节数 
+        mov dx,0x1f0                    ;从0x10读写数据 
+        xor bx,bx 
 .writew:
-        in ax,dx
-        mov [bx],ax        ; 这里ds已经被设置为指向0x10000地址的基地址，所以这里可以将内核程序读入到指定的位置 
+        mov ax,[bx] 
+        out dx,ax
+                
         add bx,2
         loop .writew
 
