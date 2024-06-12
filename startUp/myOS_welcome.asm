@@ -121,8 +121,8 @@ doShowOneStrRet:
     ret 
 
 chooseOption:
-    call showScreen
     s:
+        call showScreen
         call clearBuf
         mov ah,0
         int 16H 
@@ -204,6 +204,68 @@ write_to_disk:
         pop ax
     
         ret
+
+read_usr_name_from_disk:
+; di:si 目标扇区 高16位放di 低16位放si 
+    ; ds 数据段基址 
+    ; bx 数据总数 
+        push ax
+        push bx
+        push cx
+        push dx
+    
+        mov dx,0x1f2
+        mov al,1
+        out dx,al                       ;设置需要读写的扇区数量，通过0x1f2端口
+
+        inc dx                          ;0x1f3
+        mov ax,si
+        out dx,al                       ;LBA地址7~0
+
+        inc dx                          ;0x1f4
+        mov al,ah
+        out dx,al                       ;LBA地址15~8
+
+        inc dx                          ;0x1f5
+        mov ax,di
+        out dx,al                       ;LBA 23~16
+
+        inc dx                          ;0x1f6
+        mov al,0xe0                     ;LBA28 
+        or al,ah                        ;端口高四位为0x1110 低四位为扇区号的最高四位 
+        out dx,al
+
+        inc dx                          ;0x1f7
+        mov al,0x20                     ;向端口发送read命令 
+        out dx,al
+
+.readwaits:
+        in al,dx
+        and al,0x88
+        cmp al,0x08
+        jnz .readwaits                      ;查看端口状态 
+
+        mov dx,0x1f0                    ;从0x1f0读写数据 
+        
+.readw:
+        in ax,dx 
+        mov [bx],ax 
+        add bx,2 
+        cmp ax,0
+        jnz .readw
+
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+    
+        ret
+
+read_usr_message:
+    mov bx, buffer_name 
+    call read_usr_name_from_disk
+    ret 
+
 do1:
     call clearScreen
     mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
@@ -249,9 +311,10 @@ start:
     ; 初始化段寄存器
     mov ax,[stack_segment]
     mov ss,ax 
-    mov sp,256 
+    mov sp,256 ;0x00-0xff 共256
     mov ax,[data_1_segment]
     mov ds,ax 
+    call read_usr_message 
 
     call clearScreen
     ; call showwelcome
@@ -269,7 +332,7 @@ SECTION code_2 align=16 vstart=0
 
 ;===============================================================================
 SECTION data_1  align=16 vstart=0 
-    buffer resb 64 ; 分配64字节
+    buffer_name resb 64 ; 分配64字节
 strTable dw first, second  ; 这里存储了几个字符串的偏移地址 
 first db "1) clock",0
 second db "2) set name",0
