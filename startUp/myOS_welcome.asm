@@ -139,14 +139,13 @@ chooseOption:
         mov ah,0
         int 16H 
         cmp al, '1'
-        jz do1 
+        call do1 
         cmp al, '2'
-        jz do2 
+        call do2 
         cmp al, '3'
-        jz do3 
+        call do3 
         cmp al, '4'
-        jz do4 
-
+        call do4 
 
         jmp s 
 clearBuf: ; while loop to clean buffer 
