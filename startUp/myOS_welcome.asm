@@ -83,7 +83,7 @@ showScreen:; show all line in screen
     pop ax 
     ret 
 
-doShowOneStr:; bx->begin address ds: base reg 
+doShowOneStr:; bx->begin address ds: base reg  di: location for display in 0xb800 
     push si 
     push ax 
     push es 
@@ -97,7 +97,7 @@ doShowOneStr:; bx->begin address ds: base reg
 
     
     mov al, ds:[bx+si] ; 实质实现了一个while循环，先做一步并判断是否满足条件，不满足直接return 
-    cmp al,0
+    test al,al 
     je doShowOneStrRet
     cpyChar:   
         ; mov al,ds:[bx+si]
@@ -120,8 +120,20 @@ doShowOneStrRet:
     pop si 
     ret 
 
+showUsrName:
+    push bx 
+    push dx
+    call read_usr_message
+    mov dx, 0 
+    mov bx, buffer_name
+    call doShowOneStr
+
+    pop dx 
+    pop bx 
+    ret 
 chooseOption:
     s:
+        call showUsrName
         call showScreen
         call clearBuf
         mov ah,0
@@ -206,9 +218,9 @@ write_to_disk:
         ret
 
 read_usr_name_from_disk:
-; di:si 目标扇区 高16位放di 低16位放si 
+    ; di:si 目标扇区 高16位放di 低16位放si 
     ; ds 数据段基址 
-    ; bx 数据总数 
+    ; bx 数据缓冲区 
         push ax
         push bx
         push cx
@@ -262,8 +274,10 @@ read_usr_name_from_disk:
         ret
 
 read_usr_message:
+    push bx 
     mov bx, buffer_name 
     call read_usr_name_from_disk
+    pop bx 
     ret 
 
 do1:
@@ -277,10 +291,11 @@ do1End:
     ret 
 
 do2:
-    push bx 
+    push dx 
     call clearScreen
     mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
     int 16H ; get dword byte form keyBoard ,ah = scanCode al = ascii 
+    xor bx,bx 
 
     cmp ah ,0x01 
     jz do2End ; esc return choose 
@@ -289,7 +304,7 @@ do2:
     jz do2End
 
 
-    mov buffer[bx] , al 
+    mov buffer_name[bx] , al 
     add bx,1 
 
     
