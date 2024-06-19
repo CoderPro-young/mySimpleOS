@@ -133,20 +133,26 @@ showUsrName:
     ret 
 chooseOption:
     s:
-        call showUsrName
+        ; call showUsrName
         call showScreen
         call clearBuf
         mov ah,0
         int 16H 
+    .do1:
         cmp al, '1'
+        jne .do2 
         call do1 
+        jmp .loop 
+    .do2:
         cmp al, '2'
+        jne .loop 
         call do2 
-        cmp al, '3'
-        call do3 
-        cmp al, '4'
-        call do4 
+        ; cmp al, '3'
+        ; call do3 
+        ; cmp al, '4'
+        ; call do4 
 
+    .loop:
         jmp s 
 clearBuf: ; while loop to clean buffer 
     mov ah,1
