@@ -133,7 +133,7 @@ showUsrName:
     ret 
 chooseOption:
     s:
-        ; call showUsrName
+        call showUsrName
         call showScreen
         call clearBuf
         mov ah,0
@@ -280,8 +280,14 @@ read_usr_name_from_disk:
 
 read_usr_message:
     push bx 
+    push di 
+    push si 
+    xor di,di 
     mov bx, buffer_name 
+    mov si,weclome_os_data_start 
     call read_usr_name_from_disk
+    pop si 
+    pop di 
     pop bx 
     ret 
 
@@ -296,7 +302,7 @@ do1End:
     ret 
 
 do2:
-    push dx 
+    push bx 
     call clearScreen
     mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
     int 16H ; get dword byte form keyBoard ,ah = scanCode al = ascii 
@@ -334,7 +340,7 @@ start:
     mov sp,256 ;0x00-0xff 共256
     mov ax,[data_1_segment]
     mov ds,ax 
-    call read_usr_message 
+    ; call showUsrName 
 
     call clearScreen
     ; call showwelcome
