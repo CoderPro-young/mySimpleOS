@@ -126,6 +126,7 @@ showUsrName:
     call read_usr_message
     mov dx, 0 
     mov bx, buffer_name
+    mov di,0 
     call doShowOneStr
 
     pop dx 
@@ -207,11 +208,12 @@ write_to_disk:
         jnz .waits                      ;��æ����Ӳ����׼�������ݴ��� 
 
         mov cx,bx                      ;需要读写的字节数 
+        shr cx,1 
         mov dx,0x1f0                    ;从0x10读写数据 
-        xor bx,bx 
+        mov bx,buffer_name 
 .writew:
         mov ax,[bx] 
-        out dx,ax
+        out dx,ax 
                 
         add bx,2
         loop .writew
@@ -306,11 +308,12 @@ do1End:
 do2:
     push bx 
     call clearScreen
+    xor bx,bx 
+
     .do2Loop:
 
         mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
         int 16H ; get dword byte form keyBoard ,ah = scanCode al = ascii 
-        xor bx,bx 
 
         cmp ah ,0x01 
         jz do2End ; esc return choose 
@@ -326,9 +329,10 @@ do2:
     
 
 do2End:
-    test bx,bx 
+    
     xor di,di 
     mov si, weclome_os_data_start 
+    test bx,bx 
     jnz write_to_disk 
     pop bx 
     ret 
