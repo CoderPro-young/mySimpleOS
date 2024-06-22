@@ -138,6 +138,7 @@ chooseOption:
         call clearBuf
         mov ah,0
         int 16H 
+
     .do1:
         cmp al, '1'
         jne .do2 
@@ -298,25 +299,29 @@ do1:
 
     cmp ah ,0x01 
     jz do1End ; esc return choose 
+    jmp do1 
 do1End:    
     ret 
 
 do2:
     push bx 
     call clearScreen
-    mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
-    int 16H ; get dword byte form keyBoard ,ah = scanCode al = ascii 
-    xor bx,bx 
+    .do2Loop:
 
-    cmp ah ,0x01 
-    jz do2End ; esc return choose 
+        mov ah,0 ;ah = 0 pop keyBoard ah = 1 isEmpty
+        int 16H ; get dword byte form keyBoard ,ah = scanCode al = ascii 
+        xor bx,bx 
 
-    cmp ah, 0x1c ; if enter, end 
-    jz do2End
+        cmp ah ,0x01 
+        jz do2End ; esc return choose 
+
+        cmp ah, 0x1c ; if enter, end 
+        jz do2End
 
 
-    mov buffer_name[bx] , al 
-    add bx,1 
+        mov buffer_name[bx] , al 
+        add bx,1 
+        jmp .do2Loop
 
     
 
