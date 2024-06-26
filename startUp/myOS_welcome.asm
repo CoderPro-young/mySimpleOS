@@ -333,7 +333,10 @@ do2End:
     xor di,di 
     mov si, weclome_os_data_start 
     test bx,bx 
+    jz do2Pop
+    push do2Pop
     jnz write_to_disk 
+do2Pop:
     pop bx 
     ret 
 
