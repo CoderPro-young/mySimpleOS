@@ -110,8 +110,8 @@ read_hard_disk_0:                        ;��Ӳ�̶�ȡһ���߼���
          out dx,al
 
   .waits:
-         in al,dx
-         and al,0x88
+         in al,dx ; test 指令 哪一位为1 说明需要判断哪一位 
+         and al,0x88 ; 10001000 0...1... ; 最高位为1且第四位为0 等待  0x0...1000 
          cmp al,0x08
          jnz .waits                      ;��æ����Ӳ����׼�������ݴ��� 
 

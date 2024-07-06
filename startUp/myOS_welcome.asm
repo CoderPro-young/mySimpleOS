@@ -203,7 +203,7 @@ write_to_disk:
 
 .waits:
         in al,dx
-        and al,0x88
+        and al,0x89 
         cmp al,0x08
         jnz .waits                      ;��æ����Ӳ����׼�������ݴ��� 
 
@@ -211,12 +211,14 @@ write_to_disk:
         shr cx,1 
         mov dx,0x1f0                    ;从0x10读写数据 
         mov bx,buffer_name 
+ 
 .writew:
         mov ax,[bx] 
         out dx,ax 
                 
         add bx,2
-        loop .writew
+        dec cx
+        jnz .writew
 
         pop dx
         pop cx
